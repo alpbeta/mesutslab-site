@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dokumentation – Backup & Restore</title>
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+
+    <h1>Projekt F: Backup & Restore</h1>
+    <p class="subtitle">Proxmox Backups + 3-2-1 Prinzip + External SSD (in Vorbereitung)</p>
+
+    <div class="project-card">
+      <h2>1. Ziel</h2>
+      <ul>
+        <li>Regelmäßige, automatisierte Backups von VMs/CTs (Proxmox)</li>
+        <li>Backup-Ziel: externe SSD (lokal) + optional Offsite (später)</li>
+        <li>Wiederherstellbarkeit testen (Restore-Drill)</li>
+      </ul>
+
+      <h2>2. Ist-/Soll</h2>
+      <ul>
+        <li><strong>Ist:</strong> Erste Proxmox-Setups, Snapshots vorhanden, aber kein Backup-Standard</li>
+        <li><strong>Soll:</strong> Verlässliche Backups nach 3-2-1, mit regelmäßigem Restore-Test</li>
+      </ul>
+
+      <h2>3. Geplante Architektur</h2>
+      <ul>
+        <li><strong>Primary:</strong> Proxmox VE (Host)</li>
+        <li><strong>Backup Target:</strong> Externe SSD (mount + Proxmox storage)</li>
+        <li><strong>Optional:</strong> Offsite-Kopie (später: rsync/Cloud/S3-compat)</li>
+      </ul>
+
+      <h2>4. Nächste Schritte</h2>
+      <ol>
+        <li>SSD anschließen, Gerät identifizieren (lsblk)</li>
+        <li>Filesystem + Mountpoint (z. B. /mnt/backup-ssd)</li>
+        <li>Proxmox Storage hinzufügen (Directory)</li>
+        <li>Backup Job planen (Schedule)</li>
+        <li>Restore-Test dokumentieren (Screenshot + Logs)</li>
+      </ol>
+
+      <h2>5. Nachweise (werden ergänzt)</h2>
+      <ul>
+        <li>Proxmox Storage-Konfiguration (Screenshot)</li>
+        <li>Backup Job (Screenshot)</li>
+        <li>Backup-Log (TASK OK)</li>
+        <li>Restore-Job (TASK OK)</li>
+      </ul>
+
+      <div style="margin-top:18px;">
+        <a href="https://github.com/alpbeta/homelab-portfolio" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  <div style="margin-top:28px;">
+  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>

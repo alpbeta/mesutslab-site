@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dokumentation – Monitoring (Prometheus & Grafana)</title>
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+
+  <style>
+    /* Screenshots: gleiches Layout, OHNE Cropping (contain) */
+    .sshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
+    @media (max-width:820px){.sshot-grid{grid-template-columns:1fr;}}
+    .sshot{background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:12px;}
+    .sshot .frame{
+      background:#0b0d12;border:1px solid var(--border-color);border-radius:10px;
+      aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    }
+    .sshot img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
+    .sshot .caption{color:var(--text-dim);font-size:0.9rem;margin-top:10px;}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+
+    <h1>Projekt E: Infrastruktur Monitoring</h1>
+    <p class="subtitle">Prometheus + Grafana + node-exporter + cAdvisor</p>
+
+    <div class="project-card">
+      <h2>1. Ziel</h2>
+      <ul>
+        <li>Host- und Container-Metriken transparent überwachen (CPU/RAM/Disk/Netzwerk)</li>
+        <li>Nachweis über Prometheus Targets (UP), Grafana Dashboard und cAdvisor Übersicht</li>
+      </ul>
+
+      <h2>2. Projektumgebung</h2>
+      <ul>
+        <li><strong>Plattform:</strong> Proxmox VE → Ubuntu Server VM (ubuntu-server-01 / 192.168.178.40)</li>
+        <li><strong>Stack:</strong> Docker + Docker Compose</li>
+        <li><strong>Services/Ports:</strong> Grafana (3000), Prometheus (9090), cAdvisor (8081→8080)</li>
+        <li><strong>Exporter:</strong> node-exporter (Host), cAdvisor (Container)</li>
+      </ul>
+
+      <h2>3. Architektur</h2>
+      <ul>
+        <li><strong>Prometheus</strong> sammelt Metriken (Scraping von Exportern)</li>
+        <li><strong>Grafana</strong> visualisiert die Metriken über Dashboards</li>
+        <li><strong>cAdvisor</strong> liefert Container-/cgroup-Metriken</li>
+      </ul>
+
+      <h2>4. Verifikation (Nachweise)</h2>
+      <ul>
+        <li><strong>docker compose ps</strong>: Services laufen</li>
+        <li><strong>/targets</strong>: Targets sind UP</li>
+        <li><strong>Grafana</strong>: Dashboard zeigt Metriken</li>
+        <li><strong>cAdvisor</strong>: Container-Übersicht erreichbar</li>
+      </ul>
+
+      <h2>Screenshots (Nachweis)</h2>
+      <div class="sshot-grid">
+        <div class="sshot">
+          <div class="frame">
+            <img src="/assets/img/projects/monitoring/monitoring-docker-compose-ps.png" alt="docker compose ps" loading="lazy">
+          </div>
+          <div class="caption">Monitoring-Stack läuft: docker compose ps (Services aktiv).</div>
+        </div>
+
+        <div class="sshot">
+          <div class="frame">
+            <img src="/assets/img/projects/monitoring/prometheus-targets-up.png" alt="Prometheus Targets UP" loading="lazy">
+          </div>
+          <div class="caption">Prometheus Targets: relevante Targets erreichbar (State: UP).</div>
+        </div>
+
+        <div class="sshot">
+          <div class="frame">
+            <img src="/assets/img/projects/monitoring/grafana-dashboard-host.png" alt="Grafana Dashboard" loading="lazy">
+          </div>
+          <div class="caption">Grafana Dashboard: Host-/Systemmetriken visualisiert.</div>
+        </div>
+
+        <div class="sshot">
+          <div class="frame">
+            <img src="/assets/img/projects/monitoring/cadvisor-containers.png" alt="cAdvisor Container Overview" loading="lazy">
+          </div>
+          <div class="caption">cAdvisor: Container-Übersicht als Nachweis für Container-Monitoring.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;text-align:center;">
+        <a href="https://github.com/alpbeta/homelab-portfolio" target="_blank" rel="noopener">Repository auf GitHub öffnen</a>
+      </div>
+    </div>
+  <div style="margin-top:28px;">
+  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>

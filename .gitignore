@@ -1,0 +1,14 @@
+# Backup-Dateien
+*.bak
+*.bak.*
+*.backup
+
+# Zugangsdaten
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Betriebssystem
+.DS_Store

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dokumentation – Cloudflare Tunnel (Publishing)</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <style>
+    .doc{background:#1e2229;padding:42px;border-radius:12px;line-height:1.65;color:#d1d5db;border:1px solid #30363d}
+    .doc h1,.doc h2,.doc h3,.doc h4{color:var(--accent-blue)!important}
+    .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 18px;color:#c9d1d9;font-size:.95em}
+    .meta span{background:#161b22;border:1px solid #30363d;border-radius:999px;padding:6px 10px}
+    .callout{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin:14px 0 18px}
+    ul{margin:10px 0 0 18px}
+    li{margin:6px 0}
+    pre{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:12px 0}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95em}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+    @media (max-width: 820px){.grid-2{grid-template-columns:1fr}}
+    .imgwrap{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:10px}
+    .imgwrap img{width:100%;border-radius:8px}
+    .caption{font-size:.85em;color:#8b949e;margin-top:8px}
+    .links{margin-top:22px;text-align:center}
+    .links a{display:inline-block;margin:6px 10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../../index.html" class="backlink">← Zurück zum Lab-Dashboard</a>
+
+    <div class="doc">
+      <h1>Projekt D: Cloudflare Tunnel – Publishing von mesutslab.dev</h1>
+
+      <div class="meta">
+        <span><strong>Domain:</strong> mesutslab.dev + www</span>
+        <span><strong>Host:</strong> Ubuntu VM (192.168.178.40)</span>
+        <span><strong>Origin:</strong> NGINX Reverse Proxy (Port 80)</span>
+        <span><strong>Service:</strong> cloudflared (systemd)</span>
+      </div>
+
+      <div class="callout">
+        <strong>Ziel:</strong> Sichere Veröffentlichung der internen Web-Services ohne Port-Forwarding (Inbound geschlossen), Zugriff über Cloudflare Tunnel.
+      </div>
+
+      <h2>1. Ausgangslage</h2>
+      <ul>
+        <li>Website / Reverse Proxy läuft auf Ubuntu VM (Docker NGINX).</li>
+        <li>Domain wird über Cloudflare verwaltet.</li>
+        <li>Publishing soll ohne klassische Portfreigaben erfolgen.</li>
+      </ul>
+
+      <h2>2. Architektur</h2>
+      <ul>
+        <li><strong>cloudflared</strong> baut einen ausgehenden Tunnel zu Cloudflare auf.</li>
+        <li>Cloudflare routet Requests für <code>mesutslab.dev</code> auf den lokalen Origin.</li>
+        <li>Origin ist <strong>NGINX</strong> auf <code>http://127.0.0.1:80</code> (Ubuntu VM).</li>
+      </ul>
+
+      <h2>3. Konfiguration (ingress)</h2>
+      <pre><code>tunnel: 03e1b69e-06f3-48d8-acb9-fac1a2e39d46
+credentials-file: /root/.cloudflared/03e1b69e-06f3-48d8-acb9-fac1a2e39d46.json
+
+ingress:
+  - hostname: mesutslab.dev
+    service: http://127.0.0.1:80
+  - hostname: www.mesutslab.dev
+    service: http://127.0.0.1:80
+  - service: http_status:404</code></pre>
+
+      <h2>4. Problem & Lösung: HTTP 502</h2>
+      <p><strong>Symptom:</strong> Externes <code>curl -I https://mesutslab.dev</code> liefert 502 Bad Gateway.</p>
+      <p><strong>Root Cause:</strong> cloudflared war falsch konfiguriert und hat auf <code>127.0.0.1:8006</code> (Proxmox WebGUI Port) gezeigt.</p>
+      <pre><code>dial tcp 127.0.0.1:8006: connect: connection refused</code></pre>
+      <p><strong>Fix:</strong> Origin korrekt auf <code>http://127.0.0.1:80</code> gesetzt → Website wieder erreichbar.</p>
+
+      <h2>5. Verifikation</h2>
+      <pre><code># lokal
+curl -I http://127.0.0.1:80
+
+# extern (über Cloudflare)
+curl -I https://mesutslab.dev</code></pre>
+
+      <h2>Screenshots (Nachweis)</h2>
+      <div class="grid-2">
+        <div class="imgwrap">
+          <img src="/assets/img/projects/tunnel/cloudflared-status.png?v=2" alt="cloudflared systemd status" />
+          <div class="caption">systemctl status cloudflared (active/running).</div>
+        </div>
+        <div class="imgwrap">
+          <img src="/assets/img/projects/tunnel/config-yml.png?v=2" alt="cloudflared config.yml" />
+          <div class="caption">cloudflared config.yml (ingress → NGINX :80).</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="imgwrap">
+          <img src="/assets/img/projects/tunnel/502-log.png?v=2" alt="502 root cause log" />
+          <div class="caption">Fehlernachweis: 127.0.0.1:8006 refused.</div>
+        </div>
+        <div class="imgwrap">
+          <img src="/assets/img/projects/tunnel/curl-external-200.png?v=2" alt="curl external 200" />
+          <div class="caption">Nach Fix: curl extern → 200 OK.</div>
+        </div>
+      </div>
+
+      <div class="links">
+        <a href="https://github.com/alpbeta/homelab-portfolio/blob/main/docs/PROJECT_D_CLOUDFLARE_TUNNEL.md">Dokumentation auf GitHub ansehen</a>
+        <a href="https://github.com/alpbeta/homelab-portfolio">Repository auf GitHub öffnen</a>
+      </div>
+    </div>
+  <div style="margin-top:28px;">
+  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>

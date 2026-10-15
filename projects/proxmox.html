@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumentation - Proxmox VE</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        /* Teknik Doküman Estetiği */
+        .markdown-body {
+            background: #1e2229;
+            padding: 40px;
+            border-radius: 8px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            line-height: 1.6;
+            color: #d1d5db;
+            border: 1px solid #30363d;
+        }
+        .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #30363d; padding-bottom: 10px; color: #58a6ff; }
+        .markdown-body ul { padding-left: 20px; }
+        .markdown-body .highlight { color: #ffa657; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="backlink">← Zurück zum Lab-Dashboard</a>
+        
+        <div class="markdown-body">
+            <h1>Projekt: Proxmox VE Integration</h1>
+            <p><strong>Durchgeführt von:</strong> Mesut Sirtikara</p>
+            <p><strong>Datum:</strong> 30.12.2025 – 02.01.2026</p>
+
+            <hr>
+
+            <pre style="white-space: pre-wrap; font-family: inherit;">
+1. P
+rojektziel
+Ziel des Projekts war der Aufbau einer stabilen Virtualisierungsumgebung mit Proxmox VE
+sowie die Bereitstellung eines Ubuntu Server als virtuelle Maschine inklusive sicherer
+Administration und Wiederherstellungsstrategie.
+
+2. Ist- / Soll-Zustand
+2.1 Ist-Zustand
+- Keine vorhandene Virtualisierungsplattform
+- Netzwerkumgebung mit instabiler Hardware (Hub)
+
+2.2 Soll-Zustand
+- Proxmox VE als stabile Plattform
+- Sichere Administration per SSH (Key-only)
+- Snapshot als Wiederherstellungspunkt
+
+3. Projektumgebung
+- Hypervisor: Proxmox VE (Port 8006)
+- Clients: MacBook (Intel 2017) & Mac mini (M4)
+<h3 style="color: #58a6ff;">3. Projektumgebung & Infrastruktur</h3>
+<p>
+    Die Infrastruktur basiert auf einer hybriden Architektur, bei der ein ehemaliges Consumer-Gerät in einen professionellen Server transformiert wurde:
+</p>
+<div style="background-color: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 15px; margin: 15px 0;">
+    <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 0.95em; line-height: 1.6;">
+        <li>🚀 <strong>Server (Host):</strong> MacBook Pro 2017 – <em>Bare-Metal Proxmox VE 8.x Installation (macOS vollständig entfernt).</em></li>
+        <li>💻 <strong>Management-Konsole:</strong> Mac Mini M4 – <em>SSH-Administration, Web-GUI Zugriff und VS-Code Remote Development.</em></li>
+        <li>🌐 <strong>Netzwerk:</strong> Dedizierter VLAN-Bereich für VMs und SSH-Hardening für den externen Zugriff.</li>
+    </ul>
+</div>
+
+<div style="text-align: center; margin: 25px 0;">
+    <img src="/assets/img/00-hardware.png" alt="MacBook Pro Proxmox Host" style="width:100%; border-radius:8px; border:1px solid #333; box-shadow: 0 4px 12px rgba(0,0,0,0.6);">
+    <p style="font-size: 0.85em; color: #8b949e; margin-top: 10px;">
+        <em>Abbildung: Das MacBook Pro 2017 als aktiver Proxmox-Node (Console-View).</em>
+    </p>
+</div>
+
+<img src="/assets/img/01-summary.png" style="width:100%; border-radius:8px; margin:20px 0; border:1px solid #333;">
+
+4. Projektdurchführung
+4.2 Netzwerk-Fehleranalyse (Zentrales Problem)
+Symptome: Zeitweise Nichterreichbarkeit.
+Ursache: Inkompatibler Hub.
+Lösung: Hardwaretausch.
+<img src="/assets/img/02_netzwerk.png" style="width:100%; border-radius:8px; margin:20px 0; border:1px solid #333;">
+
+4.6 SSH-Hardening
+Konfiguration via /etc/ssh/sshd_config.d/
+- Key-only Login erzwungen
+- Root-Login deaktiviert
+<img src="/assets/img/03-snapshots.png" style="width:100%; border-radius:8px; margin:20px 0; border:1px solid #333;">
+            </pre>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="https://github.com/alpbeta/homelab-portfolio/blob/main/PROJECT_A_PROXMOX.md">View on GitHub</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

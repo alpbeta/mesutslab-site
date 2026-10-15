@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dokumentation – NGINX Reverse Proxy (Docker Compose)</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <style>
+    .doc{background:#1e2229;padding:42px;border-radius:12px;line-height:1.65;color:#d1d5db;border:1px solid #30363d}
+    .doc h1,.doc h2,.doc h3,.doc h4{color:var(--accent-blue)!important}
+    .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 18px;color:#c9d1d9;font-size:.95em}
+    .meta span{background:#161b22;border:1px solid #30363d;border-radius:999px;padding:6px 10px}
+    .callout{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin:14px 0 18px}
+    ul{margin:10px 0 0 18px}
+    li{margin:6px 0}
+    pre{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:12px 0}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95em}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+    @media (max-width: 820px){.grid-2{grid-template-columns:1fr}}
+    .imgwrap{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:10px}
+    .imgwrap img{width:100%;border-radius:8px}
+    .caption{font-size:.85em;color:#8b949e;margin-top:8px}
+    .links{margin-top:22px;text-align:center}
+    .links a{display:inline-block;margin:6px 10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../../index.html" class="backlink">← Zurück zum Lab-Dashboard</a>
+
+    <div class="doc">
+      <h1>Projekt B: NGINX Reverse Proxy mit Docker Compose</h1>
+
+      <div class="meta">
+        <span><strong>Host:</strong> Proxmox VE → Ubuntu VM (ubuntu-server-01)</span>
+        <span><strong>Stack:</strong> Docker + Docker Compose</span>
+        <span><strong>Firewall:</strong> UFW aktiv</span>
+        <span><strong>Network:</strong> web (external)</span>
+      </div>
+
+      <div class="callout">
+        <strong>Ziel:</strong> Mehrere interne Services über einen zentralen Reverse Proxy erreichbar machen (Ports konsolidieren, Services intern isolieren).
+      </div>
+
+      <h2>Ziel</h2>
+      <ul>
+        <li>Zentraler Reverse Proxy als einheitlicher Einstiegspunkt (Port 80)</li>
+        <li>Services bleiben intern (Docker Network), keine direkten externen Ports</li>
+        <li>Path-based Routing: <code>/whoami/</code> und <code>/echo/</code></li>
+      </ul>
+
+      <h2>Umgebung</h2>
+      <ul>
+        <li><strong>Proxmox VE</strong> → <strong>Ubuntu Server VM</strong> (ubuntu-server-01)</li>
+        <li><strong>Reverse Proxy:</strong> nginx:alpine</li>
+        <li><strong>Backend:</strong> traefik/whoami, ealen/echo-server</li>
+        <li><strong>Docker Network:</strong> web (external)</li>
+      </ul>
+
+      <h2>Umsetzung</h2>
+      <h3>Projektstruktur</h3>
+      <pre><code>~/projects/nginx-reverse-proxy</code></pre>
+
+      <h3>Docker Compose Services</h3>
+      <ul>
+        <li><strong>reverse-proxy</strong> publiziert HTTP nach außen (Port 80)</li>
+        <li><strong>whoami</strong> intern</li>
+        <li><strong>echo</strong> intern</li>
+      </ul>
+
+      <h3>NGINX Routing (path-based)</h3>
+      <ul>
+        <li><code>/whoami/</code> → whoami</li>
+        <li><code>/echo/</code> → echo-server</li>
+      </ul>
+
+      <h3>Firewall</h3>
+      <p>UFW erlaubt mindestens <code>22/tcp</code> (SSH) und <code>80/tcp</code> (HTTP).</p>
+
+      <h2>Verifikation</h2>
+      <ul>
+        <li><strong>Lokal:</strong> <code>curl http://127.0.0.1/echo/</code></li>
+        <li><strong>LAN (Mac):</strong> <code>curl http://192.168.178.40/echo/</code></li>
+      </ul>
+
+      <h2>Ergebnis</h2>
+      <ul>
+        <li>Ein zentraler Reverse Proxy stellt mehrere Services über eine öffentliche Schnittstelle bereit.</li>
+        <li>Services sind über Docker Network intern isoliert.</li>
+        <li>Zugriff von Client im LAN erfolgreich bestätigt.</li>
+      </ul>
+
+      <h2>Screenshots (Nachweis)</h2>
+      <div class="grid-2">
+        <div class="imgwrap">
+          <img src="/assets/img/projects/docker/docker-compose-ps.png" alt="docker compose ps" />
+          <div class="caption">Container-Status: docker compose ps.</div>
+        </div>
+        <div class="imgwrap">
+          <img src="/assets/img/projects/docker/nginx-default-conf.png" alt="NGINX default.conf" />
+          <div class="caption">NGINX Routing: /whoami/ und /echo/.</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="imgwrap">
+          <img src="/assets/img/projects/docker/curl-echo-local.png" alt="curl echo local" />
+          <div class="caption">Lokaler Test: curl http://127.0.0.1/echo/.</div>
+        </div>
+        <div class="imgwrap">
+          <img src="/assets/img/projects/docker/curl-echo-mac.png" alt="curl echo from mac" />
+          <div class="caption">LAN-Test (Mac): curl http://192.168.178.40/echo/.</div>
+        </div>
+      </div>
+
+      <div class="links">
+        <a href="https://github.com/alpbeta/homelab-portfolio/blob/main/docs/PROJECT_B_NGINX_REVERSE_PROXY.md">Dokumentation auf GitHub ansehen</a>
+        <a href="https://github.com/alpbeta/homelab-portfolio">Repository auf GitHub öffnen</a>
+      </div>
+    </div>
+  <div style="margin-top:28px;">
+  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>

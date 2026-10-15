@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dokumentation – Proxmox VE</title>
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <style>
+    .doc{max-width:980px;margin:0 auto;}
+    .card{
+      background:#1e2229;border:1px solid #30363d;border-radius:12px;
+      padding:26px;color:#d1d5db;line-height:1.75;
+    }
+    h1,h2{color:#58a6ff;margin-top:0}
+    h2{border-bottom:1px solid #30363d;padding-bottom:8px;margin-top:26px}
+    .meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin:12px 0 18px;color:#9ca3af}
+    .meta strong{color:#d1d5db}
+    .pill{display:inline-block;border:1px solid #30363d;border-radius:999px;padding:4px 10px;margin:0 8px 8px 0;font-size:.85em;background:#161b22}
+    .callout{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px 16px;margin:14px 0}
+    ul{padding-left:20px}
+    ol{padding-left:22px}
+    pre{
+      background:#0f1318;border:1px solid #30363d;border-radius:12px;
+      padding:14px 16px;overflow-x:auto;margin:12px 0;color:#d1d5db
+    }
+    code{font-family:SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace}
+    .imgwrap{margin:16px 0;text-align:center}
+    .imgwrap img{
+      width:100%;border-radius:12px;border:1px solid #30363d;
+      box-shadow:0 6px 18px rgba(0,0,0,.45)
+    }
+    .caption{margin-top:8px;font-size:.9em;color:#9ca3af}
+    .backlink{display:inline-block;margin-bottom:14px}
+    .footer{margin-top:18px;text-align:center}
+    .grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin:16px 0;
+}
+@media (max-width: 820px){
+  .grid-2{ grid-template-columns:1fr; }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="container doc">
+    <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+
+    <div class="card">
+      <h1>Proxmox VE – Installation, Netzwerk-Fehleranalyse, Ubuntu-Server-VM & Hardening</h1>
+
+      <div style="margin-top:10px;">
+        <span class="pill">Proxmox VE</span>
+        <span class="pill">Systemintegration</span>
+        <span class="pill">Server- & Netzwerkadministration</span>
+        <span class="pill">Ubuntu Server</span>
+        <span class="pill">SSH Hardening</span>
+        <span class="pill">UFW</span>
+        <span class="pill">Snapshots</span>
+      </div>
+
+      <div class="meta">
+        <div><strong>Projektart:</strong> Systemintegration / Server- & Netzwerkadministration</div>
+        <div><strong>Durchgeführt von:</strong> Mesut Sirtikara</div>
+        <div><strong>Zeitraum:</strong> 30.12.2025 – 02.01.2026</div>
+        <div><strong>Ausbildungsberuf:</strong> Fachinformatiker für Systemintegration (Umschulung)</div>
+        <div><strong>Projektumfeld:</strong> Virtualisierungs- & Serverumgebung (Lab / Heimnetz)</div>
+        <div><strong>Proxmox Web-GUI:</strong> Port 8006</div>
+      </div>
+
+      <div class="callout">
+        <strong>Kurzfazit:</strong> Aufbau einer stabilen Proxmox-Umgebung inkl. reproduzierbarer Netzwerk-Stabilisierung,
+        Ubuntu-Server-VM, konsequentem SSH-Hardening und Wiederherstellungsstrategie via Snapshot.
+      </div>
+
+      <h2>1. Projektziel</h2>
+      <p>
+        Ziel des Projekts war der Aufbau einer stabilen Virtualisierungsumgebung mit Proxmox VE sowie die Bereitstellung
+        eines Ubuntu Server als virtuelle Maschine inklusive sicherer Administration und Wiederherstellungsstrategie.
+      </p>
+      <p>Der Ubuntu-Server sollte:</p>
+      <ul>
+        <li>stabil im LAN erreichbar sein (Web/SSH),</li>
+        <li>per SSH administrierbar sein,</li>
+        <li>sicher gehärtet werden (Key-only SSH, Root-Login deaktiviert, Firewall),</li>
+        <li>durch einen Snapshot als „sauberer Referenzstand“ abgesichert werden.</li>
+      </ul>
+
+      <h2>2. Ist- / Soll-Zustand</h2>
+      <div class="callout">
+        <strong>Ist-Zustand</strong>
+        <ul>
+          <li>Keine vorhandene Virtualisierungsplattform</li>
+          <li>Kein zentraler Server im Netzwerk</li>
+          <li>Keine sichere Remote-Administration</li>
+          <li>Netzwerkumgebung mit instabiler Hardware (Hub)</li>
+          <li>Keine Wiederherstellungsstrategie</li>
+        </ul>
+        <strong>Soll-Zustand</strong>
+        <ul>
+          <li>Proxmox VE als stabile Virtualisierungsplattform</li>
+          <li>Ubuntu Server als virtuelle Maschine</li>
+          <li>Sichere Administration per SSH (Key-only)</li>
+          <li>Firewall zur Minimierung der Angriffsfläche</li>
+          <li>Snapshot als Wiederherstellungspunkt</li>
+          <li>Stabile Netzwerkkommunikation im LAN</li>
+        </ul>
+      </div>
+
+      <h2>3. Projektumgebung</h2>
+<div class="callout">
+  <strong>Hardware:</strong> Proxmox-Host und Management-Station als Foto-Dokumentation.
+</div>
+
+<div class="grid-2">
+  <div class="imgwrap" style="margin:0;">
+    <img src="/assets/img/projects/proxmox/macbook-proxmox-host.jpg" alt="MacBook Pro 2017 – Proxmox Host" />
+    <div class="caption">MacBook Pro (Intel, 2017) als Proxmox VE Host (Bare-Metal).</div>
+  </div>
+
+  <div class="imgwrap" style="margin:0;">
+    <img src="/assets/img/projects/proxmox/macmini-m4-admin.jpg" alt="Mac mini M4 – Management Desktop" />
+    <div class="caption">Mac mini (M4) als Management-Station (WebGUI/SSH/Tests).</div>
+  </div>
+</div>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">3.1 Server / Plattform</h3>
+      <ul>
+        <li><strong>Hypervisor:</strong> Proxmox VE (Webverwaltung über Port 8006)</li>
+        <li><strong>Storage:</strong> local (ISO/Backups), local-lvm (VM-Disks, LVM-thin)</li>
+        <li><strong>Netzwerk:</strong> Bridge vmbr0 (VM im gleichen LAN wie Clients)</li>
+      </ul>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">3.2 Client-Hardware (Administration & Tests)</h3>
+      <ul>
+        <li><strong>MacBook (Intel, 2017):</strong> Proxmox WebGUI, VM-Konsole, SSH, Konfiguration</li>
+        <li><strong>Mac mini (Apple Silicon M4):</strong> Ping/Port-Tests, Zugriff auf Proxmox, Validierung über zweiten Client</li>
+      </ul>
+      <p><strong>Hinweis:</strong> Durch zwei unterschiedliche Clients konnte sichergestellt werden, dass die Konfiguration geräteunabhängig und stabil funktioniert.</p>
+
+      <h2>4. Projektdurchführung</h2>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.1 Zugriff auf Proxmox Webinterface</h3>
+      <ul>
+        <li>Zugriff über: <code>https://&lt;Proxmox-IP&gt;:8006</code></li>
+        <li>Browserwarnung („nicht privat“) aufgrund self-signed Zertifikat (typisch in Lab-Umgebungen)</li>
+      </ul>
+      <p><strong>Ergebnis:</strong> WebGUI erreichbar, Administrationszugang funktioniert.</p>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.2 Netzwerk-Fehleranalyse (zentrales Projektproblem)</h3>
+      <div class="callout">
+        <strong>Symptome</strong>
+        <ul>
+          <li>Proxmox und VM zeitweise erreichbar, zeitweise nicht</li>
+          <li>Unterschiedliches Verhalten je nach Client</li>
+          <li>Inkonsistenter Zugriff via WebGUI und SSH</li>
+        </ul>
+        <strong>Analyse</strong>
+        <ul>
+          <li>Ping-Tests zur Erreichbarkeit</li>
+          <li>Porttests (z. B. <code>nc -zv &lt;IP&gt; 8006</code>)</li>
+          <li>Browser- und Zertifikatsthemen ausgeschlossen</li>
+          <li>Vergleichstests mit MacBook und Mac mini</li>
+        </ul>
+        <strong>Ursache</strong>
+        <p>Ein eingesetztes Netzwerkgerät (Hub) erwies sich als inkompatibel bzw. instabil im Zusammenspiel mit Linux und Bridged Networking.</p>
+        <strong>Lösung</strong>
+        <ul>
+          <li>Austausch des Netzwerkgeräts</li>
+          <li>Erneute Tests: Ping, Port 8006, WebGUI-Zugriff von beiden Clients</li>
+        </ul>
+        <p><strong>Ergebnis:</strong> Netzwerkverbindung stabil und reproduzierbar.</p>
+      </div>
+
+      <pre><code> Diagnose-Checks
+ip a
+ip r
+ping -c 3 192.168.178.1
+nc -zv &lt;Proxmox-IP&gt; 8006
+ss -lntp | grep 8006
+</code></pre>
+
+      <div class="imgwrap">
+        <img src="/assets/img/02_netzwerk.png" alt="Netzwerk-Analyse" />
+        <div class="caption">Screenshot: Netzwerk-Analyse / Troubleshooting.</div>
+      </div>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.3 ISO-Upload & VM-Erstellung</h3>
+      <ul>
+        <li>ISO: Ubuntu Server LTS in <code>local</code> hochgeladen</li>
+        <li>VM-Konfiguration: OVMF (UEFI), q35, SCSI Disk auf local-lvm (~32 GB), VirtIO NIC auf vmbr0, 2 Cores, 2–4 GB RAM</li>
+      </ul>
+      <p><strong>Ergebnis:</strong> VM erfolgreich erstellt, Installer startet.</p>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.4 Ubuntu-Installation</h3>
+      <ul>
+        <li>Guided Storage / LVM</li>
+        <li>Benutzer <code>mesut</code> angelegt, OpenSSH Server installiert</li>
+        <li>Problem: „Please remove the installation medium …“</li>
+        <li>Ursache: ISO noch im virtuellen Laufwerk eingebunden</li>
+        <li>Lösung: ISO entfernt → Neustart</li>
+      </ul>
+      <p><strong>Ergebnis:</strong> Ubuntu bootet korrekt von Disk.</p>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.5 Administration & Copy/Paste-Problem</h3>
+      <ul>
+        <li>Einschränkungen bei Copy/Paste in noVNC</li>
+        <li>Tastaturlayout-Probleme (z. B. <code>@</code>)</li>
+        <li>Lösung: Umstieg auf SSH über macOS Terminal</li>
+      </ul>
+      <p><strong>Ergebnis:</strong> Zuverlässige und professionelle Serveradministration.</p>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.6 SSH-Hardening</h3>
+      <div class="callout">
+        <strong>Ziel:</strong> Nur SSH per Public Key, kein Passwortlogin.<br/>
+        <strong>Analyse:</strong> Diagnose mit <code>sshd -T</code>.<br/>
+        <strong>Lösung:</strong> Hardening über <code>/etc/ssh/sshd_config.d/</code>:
+        <ul>
+          <li>Key-only Login erzwungen</li>
+          <li>Root-Login deaktiviert</li>
+          <li>Tests mit paralleler SSH-Session</li>
+        </ul>
+        <strong>Ergebnis:</strong> SSH nur noch per Key, Passwortlogin deaktiviert.
+      </div>
+
+      <pre><code># Beispiel (Konzept)
+PasswordAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+</code></pre>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.7 Firewall (UFW)</h3>
+      <ul>
+        <li>UFW installiert und aktiviert</li>
+        <li>Default: Incoming deny / Outgoing allow</li>
+        <li>SSH (Port 22) explizit erlaubt</li>
+      </ul>
+      <p><strong>Ergebnis:</strong> Firewall aktiv, sichere Erreichbarkeit gewährleistet.</p>
+
+      <h3 style="color:#58a6ff;margin-bottom:6px;">4.8 Snapshot (Wiederherstellungspunkt)</h3>
+      <ul>
+        <li>Snapshot erstellt: <code>post-install-secured</code> (inkl. RAM/State)</li>
+      </ul>
+      <p><strong>Ergebnis:</strong> Snapshot erfolgreich (TASK OK).</p>
+
+      <div class="imgwrap">
+        <img src="/assets/img/03-snapshots.png" alt="Snapshots / Restore" />
+        <div class="caption">Screenshot: Snapshot „post-install-secured“ als Wiederherstellungspunkt.</div>
+      </div>
+
+      <h2>5. Probleme & Lösungen (Übersicht)</h2>
+      <ul>
+        <li>Instabile Erreichbarkeit → Hub inkompatibel → Hardwaretausch → stabil</li>
+        <li>noVNC Copy/Paste/Keyboard → Administration via SSH</li>
+        <li>SSH Settings überschrieben → Hardening über <code>sshd_config.d</code> + Validierung mit <code>sshd -T</code></li>
+        <li>Boot-Meldung nach Installation → ISO entfernen</li>
+      </ul>
+
+      <h2>6. Testplan (Kurz)</h2>
+      <ul>
+        <li>Ping-/Porttests von zwei Clients</li>
+        <li>WebGUI Zugriff (Port 8006)</li>
+        <li>SSH Login (Key-only)</li>
+        <li>UFW Status</li>
+        <li>Snapshot vorhanden</li>
+      </ul>
+
+      <h2>7. Fazit</h2>
+      <p>
+        Das Projekt zeigte, dass reale Systemintegrationsprojekte häufig an Netzwerk- und Hardware-Kompatibilität scheitern
+        und nicht ausschließlich an Software. Durch strukturierte Fehleranalyse und konsequente Sicherheitsmaßnahmen konnte
+        eine stabile, sichere und wartbare Serverumgebung aufgebaut werden.
+      </p>
+
+      <div class="footer">
+        <a href="https://github.com/alpbeta/homelab-portfolio/blob/main/docs/PROJECT_A_PROXMOX.md">Dokumentation auf GitHub ansehen</a>
+            &nbsp;|&nbsp;
+            <a href="https://github.com/alpbeta/homelab-portfolio">Repository auf GitHub öffnen</a>
+      </div>
+    </div>
+  <div style="margin-top:28px;">
+  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>

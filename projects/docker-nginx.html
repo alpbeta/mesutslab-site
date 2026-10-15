@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Docker & Nginx - Mesut's Lab</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="backlink">← Zurück zur Übersicht</a>
+        <h1>Docker Reverse Proxy & Cloudflare Tunnel</h1>
+
+        <section>
+            <h2>Konzept / Konsept</h2>
+            <p>Sicherer Zugriff auf interne Services ohne Port-Forwarding am Router (Zero Trust Konzept).</p>
+        </section>
+
+        
+
+        <section>
+            <h2>Nginx Config</h2>
+            <pre><code>location /whoami/ {
+    proxy_pass http://whoami:80/;
+}</code></pre>
+        </section>
+    </div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+:root { 
+    color-scheme: dark; 
+    --bg-color: #0f1115;
+    --card-bg: #171a21;
+    --border-color: #232836;
+    --accent-blue: #67b0ff;
+    --text-main: #e6e6e6;
+    --text-dim: #b8b8b8;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+header { border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; }
+header h1 { margin: 0; font-size: 2.2rem; color: #fff; }
+
+.subtitle { color: var(--text-dim); margin-top: 8px; }
+
+h2 { margin-top: 40px; font-size: 1.4rem; border-left: 4px solid var(--accent-blue); padding-left: 15px; }
+
+/* Proje Kartları */
+.project-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 24px;
+    border-radius: 12px;
+    margin-top: 20px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-blue);
+}
+
+/* Teknoloji Etiketleri */
+.tech-tag {
+    display: inline-block;
+    background: #1e2536;
+    color: var(--accent-blue);
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-right: 8px;
+    border: 1px solid rgba(103, 176, 255, 0.2);
+}
+
+/* Linkler */
+a { color: var(--accent-blue); text-decoration: none; transition: 0.2s; }
+a:hover { opacity: 0.8; text-decoration: underline; }
+
+/* Kod Blokları (Udev rule vb. için) */
+pre {
+    background: #000;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+}
+
+code { color: #f8f8f2; }
+
+.backlink { display: inline-block; margin-bottom: 20px; font-size: 0.9rem; }
+
+/* ---- Portfolio Docs helpers ---- */
+h1,h2,h3 { color: var(--accent-blue); }
+h2 { border-left: 4px solid var(--accent-blue); padding-left: 15px; }
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin:16px 0;
+}
+@media (max-width: 820px){
+  .grid-2{ grid-template-columns:1fr; }
+}
+
+.imgwrap{
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+}
+.imgwrap img{
+  width:100%;
+  height:auto;      /* kırpmasın */
+  display:block;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.caption{
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+.btn{
+  display:inline-block;
+  background:#1e2536;
+  border:1px solid rgba(103,176,255,0.25);
+  padding:10px 14px;
+  border-radius:10px;
+}

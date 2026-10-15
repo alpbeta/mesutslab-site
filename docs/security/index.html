@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dokumentation – SSH Hardening & Fail2ban</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <style>
+    .doc{background:#1e2229;padding:42px;border-radius:12px;line-height:1.65;color:#d1d5db;border:1px solid #30363d}
+    .doc h1,.doc h2,.doc h3{color:var(--accent-blue)!important}
+    .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 18px;color:#c9d1d9;font-size:.95em}
+    .meta span{background:#161b22;border:1px solid #30363d;border-radius:999px;padding:6px 10px}
+    .callout{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin:14px 0 18px}
+    ul{margin:10px 0 0 18px}
+    li{margin:6px 0}
+    pre{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:12px 0}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95em}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+    @media (max-width: 820px){.grid-2{grid-template-columns:1fr}}
+    .imgwrap{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:10px}
+    .imgwrap img{width:100%;border-radius:8px}
+    .caption{font-size:.85em;color:#8b949e;margin-top:8px}
+    .links{margin-top:22px;text-align:center}
+    .links a{display:inline-block;margin:6px 10px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../../index.html" class="backlink">← Zurück zum Lab-Dashboard</a>
+    <div class="doc">
+      <h1>Projekt C: Security Hardening – SSH Absicherung mit Fail2ban</h1>
+
+      <div class="meta">
+        <span><strong>System:</strong> Ubuntu Server (VM auf Proxmox)</span>
+        <span><strong>SSH:</strong> Key-only, Root-Login off</span>
+        <span><strong>Firewall:</strong> UFW aktiv</span>
+        <span><strong>Schutz:</strong> Fail2ban</span>
+      </div>
+
+      <div class="callout">
+        <strong>Ziel:</strong> Schutz gegen SSH-Brute-Force durch Log-Analyse und automatische IP-Sperren via Fail2ban.
+      </div>
+
+      <h2>1. Projektziel</h2>
+      <p>Ziel dieses Projekts war die Härtung eines Ubuntu Servers gegen unbefugte Zugriffsversuche, insbesondere SSH-Brute-Force-Angriffe. Fail2ban erkennt Angriffe anhand von Logdateien und sperrt Angreifer automatisch.</p>
+
+      <h2>2. Begriffserklärung: Hardening</h2>
+      <p>Hardening bezeichnet Maßnahmen zur Erhöhung der Sicherheit eines Systems, ohne dessen Funktionalität einzuschränken. Dabei werden unnötige Angriffsflächen reduziert und automatisierte Schutzmechanismen eingesetzt.</p>
+
+      <h2>3. Ausgangssituation</h2>
+      <ul>
+        <li>Ubuntu Server läuft als VM auf Proxmox VE</li>
+        <li>SSH-Zugriff ist erforderlich für Administration</li>
+        <li>SSH ist bereits gehärtet (Key-only, Root-Login deaktiviert)</li>
+        <li>UFW aktiv</li>
+        <li><strong>Restrisiko:</strong> Öffentlich erreichbarer SSH kann Ziel automatisierter Angriffe werden</li>
+      </ul>
+
+      <h2>4. Projektumgebung</h2>
+      <ul>
+        <li><strong>Hypervisor:</strong> Proxmox VE</li>
+        <li><strong>VM:</strong> Ubuntu Server (VM-ID 100)</li>
+        <li><strong>Zugriff:</strong> SSH</li>
+        <li><strong>Firewall:</strong> UFW</li>
+        <li><strong>Sicherheitsdienst:</strong> Fail2ban</li>
+      </ul>
+
+      <h2>5. Durchführung</h2>
+      <h3>5.1 Installation</h3>
+      <pre><code>sudo apt update
+sudo apt install -y fail2ban
+sudo systemctl enable --now fail2ban
+systemctl status fail2ban --no-pager</code></pre>
+
+      <h3>5.2 SSH-Jail Konfiguration</h3>
+      <pre><code># /etc/fail2ban/jail.local (Beispiel)
+maxretry = 3
+findtime = 10m
+bantime  = 1h</code></pre>
+
+      <h3>5.3 Log-Analyse</h3>
+      <pre><code>sudo tail -n 50 /var/log/auth.log</code></pre>
+
+      <h3>5.4 Test</h3>
+      <pre><code>sudo fail2ban-client status
+sudo fail2ban-client status sshd</code></pre>
+
+      <h2>Screenshots (Nachweis)</h2>
+      <div class="grid-2">
+        <div class="imgwrap">
+          <img src="/assets/img/projects/security/fail2ban-service.png?v=2?v=2" alt="Fail2ban Service Status" />
+          <div class="caption">Fail2ban Dienststatus.</div>
+        </div>
+        <div class="imgwrap">
+          <img src="/assets/img/projects/security/jail-local.png?v=2?v=2" alt="jail.local Konfiguration" />
+          <div class="caption">SSH-Jail Konfiguration.</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="imgwrap">
+          <img src="/assets/img/projects/security/auth-log.png?v=2?v=2" alt="auth.log Beispiele" />
+          <div class="caption">auth.log Beispiele (Angriffsindikatoren).</div>
+        </div>
+        <div class="imgwrap">
+          <img src="/assets/img/projects/security/fail2ban-sshd-status.png?v=2?v=2" alt="Fail2ban sshd Status" />
+          <div class="caption">Nachweis: fail2ban-client status sshd.</div>
+        </div>
+      </div>
+
+      <div class="links">
+        <a href="https://github.com/alpbeta/homelab-portfolio/blob/main/docs/PROJECT_C_SSH_FAIL2BAN.md">Dokumentation auf GitHub ansehen</a>
+        <a href="https://github.com/alpbeta/homelab-portfolio">Repository auf GitHub öffnen</a>
+      </div>
+    </div>
+  <div style="margin-top:28px;">
+  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+</div>
+
+</div>
+</body>
+</html>
