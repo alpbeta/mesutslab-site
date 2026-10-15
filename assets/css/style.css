@@ -1,5 +1,5 @@
-:root { 
-    color-scheme: dark; 
+:root {
+    color-scheme: dark;
     --bg-color: #0f1115;
     --card-bg: #171a21;
     --border-color: #232836;
@@ -109,4 +109,16 @@ h2 { border-left: 4px solid var(--accent-blue); padding-left: 15px; }
   border:1px solid rgba(103,176,255,0.25);
   padding:10px 14px;
   border-radius:10px;
+}
+
+/* Status-Badge für Projekte in Arbeit */
+.status-tag {
+    display: inline-block;
+    background: rgba(240, 180, 60, 0.12);
+    color: #f0b43c;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-right: 8px;
+    border: 1px solid rgba(240, 180, 60, 0.35);
 }
