@@ -159,23 +159,22 @@ qm start 999</code></pre>
       <h3>5.2 Ergebnis</h3>
       <pre><code># Restore
 total bytes read 55835164672, sparse bytes 28280025088 (50.6%)
-→ 52 GB Disk in 97 Sekunden wiederhergestellt
+→ 52 GB Disk in 97 Sekunden wiederhergestellt</code></pre>
+      <p>Die wiederhergestellte VM bootete fehlerfrei. Laut Bootlog starteten SSH, Docker und alle sieben Container;
+        die Anmeldung über die Proxmox-Konsole war erfolgreich. <code>cloudflared</code> schlug erwartungsgemäß fehl –
+        ein Beleg dafür, dass die Netzwerktrennung griff und die Kopie nicht mit der Live-Website kollidierte.</p>
+      <p><em>Nächster Ausbauschritt:</em> Beim nächsten Restore-Test zusätzlich Inhalte direkt in der Konsole prüfen
+        (Website-Dateien, <code>docker ps</code>).</p>
 
-# Prüfung in der wiederhergestellten VM
-$ hostname
-ubuntu-server-01
-$ ls ~/homelab-portfolio-site
-assets  datenschutz  docs  impressum  index.html  projects  README.md
-$ sudo docker ps --format '{{.Names}}'
-reverse-proxy
-echo
-whoami
-prometheus
-grafana
-cadvisor
-node-exporter</code></pre>
-      <p>Alle sieben Container starteten. <code>cloudflared</code> schlug erwartungsgemäß fehl – ein Beleg dafür,
-        dass die Netzwerktrennung griff und die Kopie nicht mit der Live-Website kollidierte.</p>
+      <h3>Nachweise</h3>
+      <div class="imgwrap" style="margin:14px 0">
+        <img src="/assets/img/projects/backup/restore-boot.jpg" alt="Bootvorgang der wiederhergestellten VM 999 in der Proxmox-Konsole" loading="lazy" />
+        <div class="caption">VM 999 (restore-test) startet aus dem Backup: SSH, Docker und alle Container laufen, cloudflared scheitert wegen getrenntem Netzwerk.</div>
+      </div>
+      <div class="imgwrap" style="margin:14px 0">
+        <img src="/assets/img/projects/backup/restore-login.jpg" alt="Anmeldung an der wiederhergestellten VM" loading="lazy" />
+        <div class="caption">Erfolgreiche Anmeldung an der wiederhergestellten VM (15.10.2026).</div>
+      </div>
 
       <h3>5.3 Aufräumen</h3>
       <pre><code>qm stop 999 &amp;&amp; qm destroy 999 --purge
