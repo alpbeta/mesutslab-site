@@ -3,62 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dokumentation – Backup & Restore</title>
+  <title>Dokumentation – Datensicherung & Wiederherstellung</title>
   <link rel="stylesheet" href="../../assets/css/style.css" />
+  <style>
+    .doc{background:#1e2229;padding:42px;border-radius:12px;line-height:1.65;color:#d1d5db;border:1px solid #30363d}
+    .doc h1,.doc h2,.doc h3,.doc h4{color:var(--accent-blue)!important}
+    .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 18px;color:#c9d1d9;font-size:.95em}
+    .meta span{background:#161b22;border:1px solid #30363d;border-radius:999px;padding:6px 10px}
+    .callout{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin:14px 0 18px}
+    .callout.warn{border-color:rgba(240,180,60,.45)}
+    ul,ol{margin:10px 0 0 18px}
+    li{margin:6px 0}
+    pre{background:#0b0f14;border:1px solid #30363d;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:12px 0}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95em}
+    table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.95em}
+    th,td{border:1px solid #30363d;padding:8px 10px;text-align:left;vertical-align:top}
+    th{background:#161b22;color:#c9d1d9}
+    .links{margin-top:22px;text-align:center}
+    .links a{display:inline-block;margin:6px 10px}
+    @media (max-width: 600px){.doc{padding:22px}}
+  </style>
 </head>
 <body>
   <div class="container">
     <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
 
-    <h1>Projekt F: Datensicherung & Wiederherstellung</h1>
-    <p class="subtitle">Proxmox Backups + 3-2-1 Prinzip + External SSD (in Vorbereitung)</p>
+    <div class="doc">
+      <h1>Projekt F: Datensicherung & Wiederherstellung</h1>
 
-    <div class="project-card">
+      <div class="meta">
+        <span><strong>Quelle:</strong> VM 100 (ubuntu-server-01, 52 GB)</span>
+        <span><strong>Ziel:</strong> Samsung T7, 1 TB, ext4</span>
+        <span><strong>Zeitplan:</strong> täglich 03:00, Snapshot-Modus, zstd</span>
+        <span><strong>Aufbewahrung:</strong> 7 täglich / 4 wöchentlich / 3 monatlich</span>
+        <span><strong>Stand:</strong> 15.10.2026</span>
+      </div>
+
+      <div class="callout">
+        <strong>Kurzfazit:</strong> Das Backup lief seit Februar 2026 automatisch – bis die SSD voll war.
+        Seit dem 26.07.2026 wurde kein Backup mehr erfolgreich erstellt, ohne dass es auffiel.
+        Ursache war eine fehlende Aufbewahrungsregel. Nach Analyse, Bereinigung und Einführung einer
+        Retention-Policy laufen die Backups wieder; ein isolierter Restore-Test hat die Wiederherstellbarkeit bestätigt.
+      </div>
+
       <h2>1. Ziel</h2>
       <ul>
-        <li>Regelmäßige, automatisierte Backups von VMs/CTs (Proxmox)</li>
-        <li>Backup-Ziel: externe SSD (lokal) + optional Offsite (später)</li>
-        <li>Wiederherstellbarkeit testen (Restore-Drill)</li>
+        <li>Automatisierte, tägliche Sicherung der produktiven Ubuntu-VM (Website, Reverse Proxy, Monitoring).</li>
+        <li>Backup-Ziel getrennt vom Systemdatenträger: externe SSD.</li>
+        <li>Nachweis der Wiederherstellbarkeit durch einen Restore-Test.</li>
       </ul>
 
-      <h2>2. Ist-/Soll</h2>
+      <h2>2. Umsetzung</h2>
+
+      <h3>2.1 Externe SSD einbinden</h3>
+      <p>Die SSD wird per UUID eingebunden. <code>nofail</code> verhindert, dass der Host ohne angeschlossene SSD nicht bootet.</p>
+      <pre><code># /etc/fstab
+UUID=739426fe-ac22-4133-9de1-b14ffcaef317 /mnt/Backupp ext4 defaults,nofail 0 2</code></pre>
+
+      <h3>2.2 Proxmox-Storage</h3>
+      <p><code>is_mountpoint 1</code> sorgt dafür, dass Proxmox nur schreibt, wenn die SSD wirklich gemountet ist.
+        Ohne diese Option würde ein Backup bei fehlender SSD unbemerkt auf die Systemplatte geschrieben.</p>
+      <pre><code># /etc/pve/storage.cfg
+dir: Backupp
+        path /mnt/Backupp
+        content backup
+        is_mountpoint 1</code></pre>
+
+      <h3>2.3 Backup-Job</h3>
+      <pre><code># /etc/pve/jobs.cfg (Ausgangszustand)
+vzdump: backup-0c95bee8-4301
+        schedule 03:00
+        compress zstd
+        mode snapshot
+        storage Backupp
+        vmid 100</code></pre>
+      <p>Der Snapshot-Modus sichert die VM im laufenden Betrieb – die Website bleibt während des Backups erreichbar.</p>
+
+      <h2>3. Störung: Backups schlagen unbemerkt fehl</h2>
+
+      <h3>3.1 Symptom</h3>
+      <p>Bei der Überprüfung im Oktober lagen im Backup-Verzeichnis für die letzten Wochen nur noch Logdateien,
+        aber keine Sicherungsarchive (<code>.vma.zst</code>). Das jüngste Archiv stammte vom 26.07.2026.</p>
+
+      <h3>3.2 Analyse</h3>
+      <pre><code># Log des nächtlichen Jobs (15.10.2026)
+INFO:   8% (4.4 GiB of 52.0 GiB) in 10s
+ERROR: vma_queue_write: write error - Broken pipe
+INFO: aborting backup job
+ERROR: Backup of VM 100 failed - vma_queue_write: write error - Broken pipe
+
+# Belegung der Backup-SSD
+$ df -h /mnt/Backupp
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       916G  915G     0 100% /mnt/Backupp</code></pre>
+
+      <h3>3.3 Ursache</h3>
       <ul>
-        <li><strong>Ist:</strong> Erste Proxmox-Setups, Snapshots vorhanden, aber kein Backup-Standard</li>
-        <li><strong>Soll:</strong> Verlässliche Backups nach 3-2-1, mit regelmäßigem Restore-Test</li>
+        <li><strong>Keine Aufbewahrungsregel:</strong> Der Job hatte keine <code>prune-backups</code>-Einstellung.
+          Jede Nacht kam ein neues Archiv (4–10 GB) hinzu, keines wurde gelöscht – rund 120 Archive seit Februar.</li>
+        <li><strong>Platte voll:</strong> Ab einem bestimmten Punkt brach jeder Job nach wenigen Sekunden ab.</li>
+        <li><strong>Keine Wahrnehmung:</strong> Proxmox versuchte, Fehlermails direkt vom Heimanschluss zuzustellen.
+          Der Mailanbieter lehnte diese ab (fehlender PTR-Eintrag der privaten IP); die Mails blieben in der lokalen Warteschlange.</li>
       </ul>
 
-      <h2>3. Geplante Architektur</h2>
-      <ul>
-        <li><strong>Primary:</strong> Proxmox VE (Host)</li>
-        <li><strong>Backup Target:</strong> Externe SSD (mount + Proxmox storage)</li>
-        <li><strong>Optional:</strong> Offsite-Kopie (später: rsync/Cloud/S3-compat)</li>
-      </ul>
+      <h2>4. Lösung</h2>
 
-      <h2>4. Nächste Schritte</h2>
+      <h3>4.1 Alte Backups bereinigen</h3>
+      <p>Zuerst Vorschau mit <code>--dry-run</code>, um zu prüfen, welche Archive behalten bzw. gelöscht werden:</p>
+      <pre><code>pvesm prune-backups Backupp --vmid 100 \
+  --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --dry-run</code></pre>
+      <p>Nach Prüfung der Liste (14 Archive behalten, übrige entfernt) dieselbe Bereinigung ohne <code>--dry-run</code> ausgeführt.</p>
+
+      <h3>4.2 Aufbewahrungsregel dauerhaft setzen</h3>
+      <pre><code>pvesh set /cluster/backup/backup-0c95bee8-4301 \
+  --prune-backups keep-daily=7,keep-weekly=4,keep-monthly=3</code></pre>
+      <p>Ab jetzt entfernt Proxmox nach jedem Backup automatisch ältere Archive.</p>
+
+      <table>
+        <tr><th></th><th>Vorher</th><th>Nachher</th></tr>
+        <tr><td>Belegung SSD</td><td>915 GB (100 %)</td><td>126 GB (15 %)</td></tr>
+        <tr><td>Archive</td><td>ca. 120</td><td>14</td></tr>
+        <tr><td>Retention</td><td>keine</td><td>7 / 4 / 3</td></tr>
+      </table>
+
+      <h3>4.3 Verifikation: manuelles Backup</h3>
+      <pre><code>$ vzdump 100 --storage Backupp --mode snapshot --compress zstd
+INFO: archive file size: 10.17GB
+INFO: Finished Backup of VM 100 (00:02:20)
+INFO: Backup job finished successfully</code></pre>
+
+      <h2>5. Restore-Test</h2>
+
+      <div class="callout warn">
+        <strong>Risikobewertung:</strong> Der Thin-Pool <code>local-lvm</code> war zu 70 % belegt. Ein Restore dorthin hätte ihn
+        füllen können – mit Schreibfehlern auch für die produktive VM 100. Deshalb wurde der Test auf einem
+        temporären Storage auf der Backup-SSD durchgeführt.
+      </div>
+
+      <h3>5.1 Vorgehen</h3>
       <ol>
-        <li>SSD anschließen, Gerät identifizieren (lsblk)</li>
-        <li>Filesystem + Mountpoint (z. B. /mnt/backup-ssd)</li>
-        <li>Proxmox Storage hinzufügen (Directory)</li>
-        <li>Backup Job planen (Schedule)</li>
-        <li>Restore-Test dokumentieren (Screenshot + Logs)</li>
+        <li>Temporären Directory-Storage <code>restore-test</code> auf der SSD anlegen.</li>
+        <li>Jüngstes Archiv als neue VM 999 wiederherstellen; <code>--unique 1</code> vergibt eine neue MAC-Adresse.</li>
+        <li><strong>Netzwerk trennen</strong> (<code>link_down=1</code>), bevor die VM startet: Die Kopie hat dieselbe IP wie
+          das Produktivsystem und würde sonst einen Konflikt verursachen.</li>
+        <li>VM starten, über die Konsole anmelden und Inhalte prüfen.</li>
+        <li>VM und temporären Storage wieder entfernen.</li>
       </ol>
+      <pre><code>pvesm add dir restore-test --path /mnt/Backupp/restore-test \
+  --content images --is_mountpoint /mnt/Backupp
+qmrestore &lt;archiv&gt;.vma.zst 999 --storage restore-test --unique 1
+qm set 999 --name restore-test --onboot 0
+qm set 999 --net0 "virtio=…,bridge=vmbr0,firewall=1,link_down=1"
+qm start 999</code></pre>
 
-      <h2>5. Nachweise (werden ergänzt)</h2>
+      <h3>5.2 Ergebnis</h3>
+      <pre><code># Restore
+total bytes read 55835164672, sparse bytes 28280025088 (50.6%)
+→ 52 GB Disk in 97 Sekunden wiederhergestellt
+
+# Prüfung in der wiederhergestellten VM
+$ hostname
+ubuntu-server-01
+$ ls ~/homelab-portfolio-site
+assets  datenschutz  docs  impressum  index.html  projects  README.md
+$ sudo docker ps --format '{{.Names}}'
+reverse-proxy
+echo
+whoami
+prometheus
+grafana
+cadvisor
+node-exporter</code></pre>
+      <p>Alle sieben Container starteten. <code>cloudflared</code> schlug erwartungsgemäß fehl – ein Beleg dafür,
+        dass die Netzwerktrennung griff und die Kopie nicht mit der Live-Website kollidierte.</p>
+
+      <h3>5.3 Aufräumen</h3>
+      <pre><code>qm stop 999 &amp;&amp; qm destroy 999 --purge
+pvesm remove restore-test</code></pre>
+
+      <h2>6. Lessons Learned</h2>
       <ul>
-        <li>Proxmox Storage-Konfiguration (Screenshot)</li>
-        <li>Backup Job (Screenshot)</li>
-        <li>Backup-Log (TASK OK)</li>
-        <li>Restore-Job (TASK OK)</li>
+        <li><strong>Ein Backup ohne Überwachung ist kein verlässliches Backup.</strong> Der Job war „aktiv“, hat aber monatelang nichts gesichert.</li>
+        <li><strong>Retention gehört zur Einrichtung</strong>, nicht in die Nacharbeit. Kapazität muss von Anfang an geplant werden.</li>
+        <li><strong>Erst Vorschau, dann löschen:</strong> <code>--dry-run</code> vor jeder Bereinigung.</li>
+        <li><strong>Restore-Tests isoliert durchführen:</strong> eigener Storage, getrenntes Netzwerk, keine Auswirkung auf Produktion.</li>
       </ul>
 
-      <div style="margin-top:18px;">
-        <a href="https://github.com/alpbeta/homelab-portfolio" target="_blank" rel="noopener">GitHub</a>
+      <h2>7. Offene Punkte</h2>
+      <ul>
+        <li><strong>3-2-1 noch nicht vollständig:</strong> Aktuell existieren Produktivsystem + Kopie auf der SSD. Eine Offsite-Kopie fehlt noch.</li>
+        <li><strong>Benachrichtigung:</strong> Zustellung über SMTP-Relay des Mailanbieters statt Direktversand.</li>
+        <li><strong>Regelmäßiger Restore-Test</strong>, z. B. quartalsweise.</li>
+      </ul>
+
+      <div class="links">
+        <a href="https://github.com/alpbeta/homelab-portfolio" target="_blank" rel="noopener">Repository auf GitHub öffnen</a>
       </div>
     </div>
-  <div style="margin-top:28px;">
-  <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
-</div>
 
-</div>
+    <div style="margin-top:28px;">
+      <a href="/" class="backlink">← Zurück zum Lab-Dashboard</a>
+    </div>
+  </div>
 </body>
 </html>
