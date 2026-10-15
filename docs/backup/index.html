@@ -159,23 +159,12 @@ qm start 999</code></pre>
       <h3>5.2 Ergebnis</h3>
       <pre><code># Restore
 total bytes read 55835164672, sparse bytes 28280025088 (50.6%)
-→ 52 GB Disk in 97 Sekunden wiederhergestellt
-
-# Prüfung in der wiederhergestellten VM
-$ hostname
-ubuntu-server-01
-$ ls ~/homelab-portfolio-site
-assets  datenschutz  docs  impressum  index.html  projects  README.md
-$ sudo docker ps --format '{{.Names}}'
-reverse-proxy
-echo
-whoami
-prometheus
-grafana
-cadvisor
-node-exporter</code></pre>
-      <p>Alle sieben Container starteten. <code>cloudflared</code> schlug erwartungsgemäß fehl – ein Beleg dafür,
-        dass die Netzwerktrennung griff und die Kopie nicht mit der Live-Website kollidierte.</p>
+→ 52 GB Disk in 97 Sekunden wiederhergestellt</code></pre>
+      <p>Die wiederhergestellte VM bootete fehlerfrei. Laut Bootlog starteten SSH, Docker und alle sieben Container;
+        die Anmeldung über die Proxmox-Konsole war erfolgreich. <code>cloudflared</code> schlug erwartungsgemäß fehl –
+        ein Beleg dafür, dass die Netzwerktrennung griff und die Kopie nicht mit der Live-Website kollidierte.</p>
+      <p><em>Nächster Ausbauschritt:</em> Beim nächsten Restore-Test zusätzlich Inhalte direkt in der Konsole prüfen
+        (Website-Dateien, <code>docker ps</code>).</p>
 
       <h3>Nachweise</h3>
       <div class="imgwrap" style="margin:14px 0">
