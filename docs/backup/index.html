@@ -177,6 +177,16 @@ node-exporter</code></pre>
       <p>Alle sieben Container starteten. <code>cloudflared</code> schlug erwartungsgemäß fehl – ein Beleg dafür,
         dass die Netzwerktrennung griff und die Kopie nicht mit der Live-Website kollidierte.</p>
 
+      <h3>Nachweise</h3>
+      <div class="imgwrap" style="margin:14px 0">
+        <img src="/assets/img/projects/backup/restore-boot.jpg" alt="Bootvorgang der wiederhergestellten VM 999 in der Proxmox-Konsole" loading="lazy" />
+        <div class="caption">VM 999 (restore-test) startet aus dem Backup: SSH, Docker und alle Container laufen, cloudflared scheitert wegen getrenntem Netzwerk.</div>
+      </div>
+      <div class="imgwrap" style="margin:14px 0">
+        <img src="/assets/img/projects/backup/restore-login.jpg" alt="Anmeldung an der wiederhergestellten VM" loading="lazy" />
+        <div class="caption">Erfolgreiche Anmeldung an der wiederhergestellten VM (15.10.2026).</div>
+      </div>
+
       <h3>5.3 Aufräumen</h3>
       <pre><code>qm stop 999 &amp;&amp; qm destroy 999 --purge
 pvesm remove restore-test</code></pre>
